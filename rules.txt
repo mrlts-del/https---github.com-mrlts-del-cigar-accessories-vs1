@@ -87,63 +87,63 @@ Task: Please create a full Next.js website following the above guidelines and sp
 ## Scratchpad
 
 **Phase 1: Project Setup & Configuration**
-- [ ] Initialize Next.js 15 project with TypeScript (`npx create-next-app@latest --ts`).
-- [ ] Install Shadcn UI (`npx shadcn-ui@latest init`).
-- [ ] Install Lucide React icons (`npm install lucide-react`).
-- [ ] Install Prisma (`npm install prisma --save-dev`) and Prisma Client (`npm install @prisma/client`).
-- [ ] Initialize Prisma with PostgreSQL provider (`npx prisma init --datasource-provider postgresql`).
-- [ ] Configure database connection URL in `.env`.
-- [ ] Install next-auth@beta (`npm install next-auth@beta`).
-- [ ] Configure `next-auth` adapter for Prisma (`npm install @auth/prisma-adapter`).
-- [ ] Install Stripe (`npm install stripe`).
-- [ ] Install Uploadthing (`npm install uploadthing @uploadthing/react`).
-- [ ] Configure Uploadthing API key and secret in `.env`.
-- [ ] Install Resend (`npm install resend`).
-- [ ] Configure Resend API key in `.env`.
-- [ ] Install Zustand (`npm install zustand`).
-- [ ] Install Zod (`npm install zod`).
-- [ ] Install Recharts (`npm install recharts`).
-- [ ] Configure ESLint, Prettier, and `tsconfig.json` based on project rules.
+- [X] Initialize Next.js 15 project with TypeScript (`npx create-next-app@latest --ts`). (Verified existing project)
+- [X] Install Shadcn UI (`npx shadcn-ui@latest init`).
+- [X] Install Lucide React icons (`npm install lucide-react`).
+- [X] Install Prisma (`npm install prisma --save-dev`) and Prisma Client (`npm install @prisma/client`).
+- [X] Initialize Prisma with PostgreSQL provider (`npx prisma init --datasource-provider postgresql`).
+- [X] Configure database connection URL in `.env`.
+- [X] Install next-auth@beta (`npm install next-auth@beta`).
+- [X] Configure `next-auth` adapter for Prisma (`npm install @auth/prisma-adapter`).
+- [X] Install Stripe (`npm install stripe`).
+- [X] Install Uploadthing (`npm install uploadthing @uploadthing/react`).
+- [X] Configure Uploadthing API key and secret in `.env`.
+- [X] Install Resend (`npm install resend`).
+- [X] Configure Resend API key in `.env`.
+- [X] Install Zustand (`npm install zustand`).
+- [X] Install Zod (`npm install zod`).
+- [X] Install Recharts (`npm install recharts`).
+- [X] Configure ESLint, Prettier, and `tsconfig.json` based on project rules.
 
 **Phase 2: Database Schema (Prisma)**
-- [ ] Define User model (integrating with `next-auth`).
-- [ ] Define Product, Category, Image models.
-- [ ] Define Order, OrderItem, Address models.
-- [ ] Define Cart, CartItem models (consider guest vs. user carts).
-- [ ] Define Review model.
-- [ ] Establish relationships (e.g., User-Orders, Product-Category, Order-OrderItems).
-- [ ] Run `npx prisma db push` or `npx prisma migrate dev` to sync schema.
-- [ ] Generate Prisma Client (`npx prisma generate`).
+- [X] Define User model (integrating with `next-auth`).
+- [X] Define Product, Category, Image models.
+- [X] Define Order, OrderItem, Address models.
+- [X] Define Cart, CartItem models (consider guest vs. user carts).
+- [X] Define Review model.
+- [X] Establish relationships (e.g., User-Orders, Product-Category, Order-OrderItems).
+- [X] Run `npx prisma db push` or `npx prisma migrate dev` to sync schema.
+- [X] Generate Prisma Client (`npx prisma generate`).
 
 **Phase 3: Authentication (next-auth@beta, Prisma Adapter)**
-- [ ] Set up `[...nextauth]/route.ts` handler.
-- [ ] Configure Prisma adapter.
-- [ ] Implement Email/Password provider.
-- [ ] (Optional) Implement OAuth providers (e.g., Google, GitHub).
-- [ ] Create Sign Up, Sign In, Sign Out functionality and pages/components.
-- [ ] Implement session management and access control (middleware for protected routes).
-- [ ] Implement role-based access (User, Admin) - add role to User model.
-- [ ] Implement Password Reset flow using Resend.
+- [X] Set up `[...nextauth]/route.ts` handler.
+- [X] Configure Prisma adapter.
+- [X] Implement Email/Password provider.
+- [X] (Optional) Implement OAuth providers (e.g., Google, GitHub).
+- [X] Create Sign Up, Sign In, Sign Out functionality and pages/components.
+- [X] Implement session management and access control (middleware for protected routes).
+- [X] Implement role-based access (User, Admin) - add role to User model.
+- [X] Implement Password Reset flow using Resend.
 
 **Phase 4: Core E-commerce Frontend (Next.js, Shadcn, Zustand)**
-- [ ] **Layout:** Create main site layout (header, footer, navigation).
+- [X] **Layout:** Create main site layout (header, footer, navigation).
 - [ ] **Product Listing:**
-    - [ ] Fetch products (Server Component).
+    - [X] Fetch products (Server Component).
     - [ ] Implement pagination, sorting, filtering UI.
     - [ ] Implement search functionality.
-    - [ ] Create `product-card` component.
+    - [X] Create `product-card` component.
 - [ ] **Product Detail Page:**
-    - [ ] Fetch single product data (Server Component).
-    - [ ] Display product details, images (carousel?), price.
+    - [X] Fetch single product data (Server Component).
+    - [X] Display product details, images (carousel?), price.
     - [ ] Display product reviews.
-    - [ ] "Add to Cart" button.
+    - [X] "Add to Cart" button.
 - [ ] **Shopping Cart:**
-    - [ ] Create cart state using Zustand.
-    - [ ] Implement `add-to-cart`, `remove-from-cart`, `update-quantity` actions.
-    - [ ] Create Cart page/drawer/modal to display items and total.
-    - [ ] Persist cart (local storage for guests, DB via API/Server Action for users).
+    - [X] Create cart state using Zustand.
+    - [X] Implement `add-to-cart`, `remove-from-cart`, `update-quantity` actions.
+    - [X] Create Cart page/drawer/modal to display items and total.
+    - [X] Persist cart (local storage for guests, DB via API/Server Action for users). (Initial localStorage setup done)
 - [ ] **Checkout Process:**
-    - [ ] Create multi-step checkout flow (Address -> Shipping -> Payment -> Review).
+    - [X] Create multi-step checkout flow (Address -> Shipping -> Payment -> Review). (Basic page structure created)
     - [ ] Address form and selection (link to User addresses).
     - [ ] Integrate Stripe Elements/Checkout for payment capture.
     - [ ] Server Action/API route to create Stripe Payment Intent.
