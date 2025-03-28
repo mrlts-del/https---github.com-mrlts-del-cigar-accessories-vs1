@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area'; // Assuming scroll-area exists or will be added
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input'; // For quantity updates
+// Removed unused Input import
 import { useCartStore } from '@/store/cart-store';
 import { formatCurrency } from '@/lib/utils';
 import { ShoppingCart, Trash2, Minus, Plus } from 'lucide-react';

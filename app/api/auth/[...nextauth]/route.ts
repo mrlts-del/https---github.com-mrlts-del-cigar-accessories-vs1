@@ -5,7 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google'; // Import Google provider
 import GitHubProvider from 'next-auth/providers/github'; // Import GitHub provider
 import bcrypt from 'bcryptjs';
-import type { User as PrismaUser, Role } from '@prisma/client';
+import type { Role } from '@prisma/client'; // Removed unused PrismaUser import
 import type { AdapterUser } from '@auth/core/adapters'; // Import AdapterUser
 import type { JWT } from '@auth/core/jwt'; // Import JWT from @auth/core/jwt
 

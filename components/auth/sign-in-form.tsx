@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+// Removed unused Label import
 import {
   Form,
   FormControl,
@@ -27,7 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+// Removed unused Separator import
 import { Icons } from '@/components/icons'; // Assuming an icons component exists or will be created
 
 const formSchema = z.object({

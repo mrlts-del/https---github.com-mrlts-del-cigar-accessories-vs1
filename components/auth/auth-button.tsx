@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react'; // Removed unused signIn
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons'; // Assuming spinner icon exists
