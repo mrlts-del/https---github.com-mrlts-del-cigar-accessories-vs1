@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition } from 'react'; // Removed useEffect
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import type { Product, Category, Image as ProductImage } from '@prisma/client';
+// Removed incorrect UploadFileResponse import
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,11 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox'; // Removed unused import
 import {
   Form,
   FormControl,
-  FormDescription,
+  // FormDescription, // Removed unused import
   FormField,
   FormItem,
   FormLabel,
@@ -33,11 +34,7 @@ import { Icons } from '@/components/icons';
 import { UploadDropzone } from '@/lib/uploadthing'; // Corrected import path
 import Image from 'next/image';
 import { X } from 'lucide-react';
-// Removed potentially incorrect UploadFileResponse import
-
-// TODO: Import server actions
 import { createProduct, updateProduct } from '@/actions/product'; // Import product actions
-// import { fetchCategories } from '@/actions/category'; // Assuming this exists
 
 // Define Zod schema
 const productFormSchema = z.object({
@@ -65,16 +62,13 @@ interface ProductFormProps {
 
 // Helper to map Prisma Image to form image state
 const mapPrismaImageToFormImage = (img: ProductImage): { key: string; url: string } => ({
-  // Assuming Prisma Image doesn't have 'key', use 'id' or generate one if needed.
-  // If Uploadthing provides 'key' on initial fetch, use that. For now, use ID.
-  key: img.id, // Or img.key if available and stored from Uploadthing
+  key: img.id, // Use Prisma ID as key for existing images
   url: img.url,
 });
 
 export function ProductForm({ initialData, categories }: ProductFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  // Initialize state by mapping Prisma images
   const [uploadedImages, setUploadedImages] = useState<{ key: string; url: string }[]>(
     initialData?.images?.map(mapPrismaImageToFormImage) ?? []
   );
@@ -88,19 +82,14 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
     defaultValues: initialData
       ? {
           ...initialData,
-          description: initialData.description ?? '', // Handle null description
+          description: initialData.description ?? '',
           price: initialData.price ?? 0,
           stock: initialData.stock ?? 0,
           categoryId: initialData.categoryId ?? '',
-          images: initialData.images?.map(mapPrismaImageToFormImage) ?? [], // Map images
+          images: initialData.images?.map(mapPrismaImageToFormImage) ?? [],
         }
       : {
-          name: '',
-          description: '',
-          price: 0,
-          categoryId: '',
-          stock: 0,
-          images: [],
+          name: '', description: '', price: 0, categoryId: '', stock: 0, images: [],
         },
   });
 
@@ -113,8 +102,8 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
            result = await updateProduct(initialData.id, submissionData);
            if (result.success) {
              toast.success('Product updated successfully!');
-             router.push('/admin/products'); // Redirect after update
-             router.refresh(); // Refresh data on the products page
+             router.push('/admin/products');
+             router.refresh();
            } else {
              toast.error(result.error || 'Failed to update product.');
            }
@@ -122,7 +111,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
            result = await createProduct(submissionData);
            if (result.success) {
              toast.success('Product created successfully!');
-             router.push('/admin/products'); // Redirect after creation
+             router.push('/admin/products');
            } else {
              toast.error(result.error || 'Failed to create product.');
            }
@@ -147,7 +136,6 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
         <Card>
           <CardHeader><CardTitle>{formTitle}</CardTitle></CardHeader>
           <CardContent className="space-y-6">
-            {/* Fields remain the same */}
             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Product Name</FormLabel> <FormControl> <Input placeholder="e.g., Premium Humidor" {...field} disabled={isPending} /> </FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>Description</FormLabel> <FormControl> <Textarea placeholder="Describe the product..." {...field} disabled={isPending} rows={5} /> </FormControl> <FormMessage /> </FormItem> )}/>
              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -155,7 +143,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
                  <FormField control={form.control} name="stock" render={({ field }) => ( <FormItem> <FormLabel>Stock Quantity</FormLabel> <FormControl> <Input type="number" step="1" placeholder="0" {...field} disabled={isPending} /> </FormControl> <FormMessage /> </FormItem> )}/>
              </div>
              <FormField control={form.control} name="categoryId" render={({ field }) => ( <FormItem> <FormLabel>Category</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}> <FormControl> <SelectTrigger> <SelectValue placeholder="Select a category" /> </SelectTrigger> </FormControl> <SelectContent> {categories.map((category) => ( <SelectItem key={category.id} value={category.id}> {category.name} </SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-             <FormField control={form.control} name="images" render={({ field }) => (
+             <FormField control={form.control} name="images" render={() => ( // Removed unused field
                 <FormItem>
                    <FormLabel>Product Images</FormLabel>
                    <FormControl>
@@ -172,10 +160,10 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
                          )}
                          <UploadDropzone
                             endpoint="productImageUploader"
-                            // Add explicit 'any' types for now
+                            // Revert to using 'any' for now
                             onClientUploadComplete={(res: any) => {
                                if (res) {
-                                  // Assuming 'res' is an array of objects with key and url
+                                  // Assuming res is an array of objects with key and url
                                   const newImages = res.map((file: any) => ({ key: file.key, url: file.url }));
                                   const updatedImages = [...uploadedImages, ...newImages];
                                   setUploadedImages(updatedImages);

@@ -1,7 +1,5 @@
 import Stripe from 'stripe';
-// Remove 'next/headers' import if no longer needed
 import { NextResponse } from 'next/server';
-
 import { db } from '@/lib/db';
 import { OrderStatus } from '@prisma/client';
 
@@ -23,7 +21,6 @@ if (!webhookSecret) {
 
 export async function POST(req: Request) {
   const body = await req.text();
-  // Get signature from request headers
   const signature = req.headers.get('Stripe-Signature');
 
   if (!signature) {
@@ -33,11 +30,11 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    // Re-add non-null assertion for webhookSecret
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret!);
-  } catch (err: any) {
-    console.error(`❌ Error verifying Stripe webhook signature: ${err.message}`);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err) { // Use default 'unknown' type or 'Error'
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`❌ Error verifying Stripe webhook signature: ${errorMessage}`);
+    return new NextResponse(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
   // Handle the event
@@ -45,28 +42,24 @@ export async function POST(req: Request) {
     case 'payment_intent.succeeded':
       const paymentIntentSucceeded = event.data.object as Stripe.PaymentIntent;
       console.log(`✅ PaymentIntent succeeded: ${paymentIntentSucceeded.id}`);
-
       try {
         const order = await db.order.findUnique({
           where: { stripePaymentIntentId: paymentIntentSucceeded.id },
         });
-
         if (!order) {
           console.error(`⚠️ Order not found for PaymentIntent: ${paymentIntentSucceeded.id}`);
           return NextResponse.json({ received: true, error: 'Order not found' }, { status: 200 });
         }
-
-        if (order.status === OrderStatus.PENDING || order.status !== OrderStatus.PROCESSING) {
+        if (order.status === OrderStatus.PENDING) { // Only update if PENDING
            await db.order.update({
              where: { id: order.id },
              data: { status: OrderStatus.PROCESSING },
            });
            console.log(`📦 Order ${order.id} status updated to PROCESSING.`);
-           // TODO: Trigger fulfillment, send confirmation email
+           // NOTE: Order confirmation email is sent in createOrder action now
         } else {
-           console.log(`📦 Order ${order.id} status already updated (${order.status}). Ignoring webhook.`);
+           console.log(`📦 Order ${order.id} status already ${order.status}. Ignoring webhook.`);
         }
-
       } catch (dbError) {
          console.error(`❌ DB error updating order for PI ${paymentIntentSucceeded.id}:`, dbError);
          return new NextResponse('Internal Server Error', { status: 500 });

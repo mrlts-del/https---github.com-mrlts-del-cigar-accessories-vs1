@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   PaymentElement,
-  LinkAuthenticationElement,
+  // LinkAuthenticationElement, // Removed unused import
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
@@ -29,7 +29,7 @@ export function PaymentStep({
   const stripe = useStripe();
   const elements = useElements();
 
-  const [email, setEmail] = useState(''); // For LinkAuthenticationElement
+  // const [email, setEmail] = useState(''); // Removed unused state
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 

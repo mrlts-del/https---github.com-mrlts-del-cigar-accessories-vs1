@@ -1,7 +1,7 @@
 'use client'; // Needs client-side hooks for interaction
 
 import React from 'react';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation'; // Removed useRouter
 import {
   Pagination,
   PaginationContent,
@@ -26,7 +26,7 @@ export function PaginationControls({
 }: PaginationControlsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  // const router = useRouter(); // Removed unused router
 
   const createPageURL = (pageNumber: number | string) => {
     const params = new URLSearchParams(searchParams ?? undefined);

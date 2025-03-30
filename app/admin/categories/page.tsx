@@ -18,8 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
-  DialogClose, // Import DialogClose
+  // DialogFooter, // Removed unused import
+  // DialogClose, // Removed unused import
 } from '@/components/ui/dialog';
 import {
   AlertDialog,

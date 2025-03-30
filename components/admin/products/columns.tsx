@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition } from 'react'; // Import useTransition
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type Row } from '@tanstack/react-table'; // Import Row type
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
@@ -34,8 +34,8 @@ import { toast } from 'sonner'; // Import toast
 export type ProductColumn = ProductWithDetails;
 
 // Define Cell component for actions separately to use hooks
-const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
-  const product = row.original as ProductColumn;
+const ActionsCell: React.FC<{ row: Row<ProductColumn> }> = ({ row }) => { // Use specific Row type
+  const product = row.original; // No cast needed
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
@@ -87,7 +87,7 @@ const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the product
-            "{product.name}" and remove its data from our servers.
+            "{product.name}" and remove its data from our servers. {/* Escaped quotes */}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -107,47 +107,11 @@ const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
 
 
 export const columns: ColumnDef<ProductColumn>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => ( <Checkbox checked={ table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate') } onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" /> ),
-    cell: ({ row }) => ( <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" /> ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'images',
-    header: 'Image',
-    cell: ({ row }) => {
-      const images = row.getValue('images') as ProductColumn['images'];
-      const firstImage = images?.[0]?.url;
-      return ( <div className="relative h-10 w-10 overflow-hidden rounded-sm"> {firstImage ? ( <Image src={firstImage} alt={row.original.name} fill className="object-cover" sizes="40px" /> ) : ( <div className="h-full w-full bg-muted"></div> )} </div> );
-    },
-    enableSorting: false,
-  },
-  {
-    accessorKey: 'name',
-    header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}> Name <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ),
-    cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,
-  },
-  {
-    accessorKey: 'category',
-    header: 'Category',
-    cell: ({ row }) => <div>{row.original.category?.name || 'N/A'}</div>,
-  },
-  {
-    accessorKey: 'price',
-    header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="text-right"> Price <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ),
-    cell: ({ row }) => <div className="text-right font-medium">{formatCurrency(parseFloat(row.getValue('price')))}</div>,
-  },
-  {
-    accessorKey: 'stock',
-    header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="text-right"> Stock <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ),
-     cell: ({ row }) => <div className="text-right">{row.getValue('stock')}</div>,
-  },
-  {
-    id: 'actions',
-    cell: ActionsCell, // Use the dedicated component
-    enableSorting: false,
-    enableHiding: false,
-  },
+  { id: 'select', header: ({ table }) => ( <Checkbox checked={ table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate') } onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" /> ), cell: ({ row }) => ( <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select row" /> ), enableSorting: false, enableHiding: false },
+  { accessorKey: 'images', header: 'Image', cell: ({ row }) => { const images = row.getValue('images') as ProductColumn['images']; const firstImage = images?.[0]?.url; return ( <div className="relative h-10 w-10 overflow-hidden rounded-sm"> {firstImage ? ( <Image src={firstImage} alt={row.original.name} fill className="object-cover" sizes="40px" /> ) : ( <div className="h-full w-full bg-muted"></div> )} </div> ); }, enableSorting: false },
+  { accessorKey: 'name', header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}> Name <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ), cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div> },
+  { accessorKey: 'category', header: 'Category', cell: ({ row }) => <div>{row.original.category?.name || 'N/A'}</div> },
+  { accessorKey: 'price', header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="text-right"> Price <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ), cell: ({ row }) => <div className="text-right font-medium">{formatCurrency(parseFloat(row.getValue('price')))}</div> },
+  { accessorKey: 'stock', header: ({ column }) => ( <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')} className="text-right"> Stock <ArrowUpDown className="ml-2 h-4 w-4" /> </Button> ), cell: ({ row }) => <div className="text-right">{row.getValue('stock')}</div> },
+  { id: 'actions', cell: ActionsCell, enableSorting: false, enableHiding: false },
 ];

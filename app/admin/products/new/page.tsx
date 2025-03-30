@@ -1,6 +1,6 @@
 import React from 'react';
 import { ProductForm } from '@/components/admin/products/product-form';
-import type { Category } from '@prisma/client';
+// import type { Category } from '@prisma/client'; // Removed unused import
 import { fetchCategories } from '@/actions/category'; // Import fetch action
 
 export default async function AddProductPage() {

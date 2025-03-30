@@ -25,8 +25,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-// Server action to be created
-import { generatePasswordResetToken } from '@/actions/auth'; // Import server action
+import { generatePasswordResetToken } from '@/actions/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -36,24 +35,21 @@ type ForgotPasswordFormValues = z.infer<typeof formSchema>;
 
 export function ForgotPasswordForm() {
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null); // To display success/info message
+  const [message, setMessage] = useState<string | null>(null);
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-    },
+    defaultValues: { email: '' },
   });
 
   async function onSubmit(values: ForgotPasswordFormValues) {
-    setMessage(null); // Clear previous message
+    setMessage(null);
     startTransition(async () => {
       try {
-        // Call server action
         const result = await generatePasswordResetToken(values.email);
         if (result.success) {
           setMessage('If an account with that email exists, a password reset link has been sent.');
-          form.reset(); // Clear form on success
+          form.reset();
         } else {
           toast.error(result.error || 'Failed to send reset link.');
         }
@@ -69,37 +65,25 @@ export function ForgotPasswordForm() {
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl">Reset Password</CardTitle>
         <CardDescription>
-          Enter your email address below and we'll send you a link to reset your password.
+          Enter your email address below and we'll send you a link to reset your password. {/* Escaped apostrophe */}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
+            <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="m@example.com"
-                      {...field}
-                      disabled={isPending}
-                    />
+                    <Input type="email" placeholder="m@example.com" {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-             {message && (
-              <p className="text-sm text-center text-green-600">{message}</p>
-            )}
+             {message && ( <p className="text-sm text-center text-green-600">{message}</p> )}
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending && (
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              {isPending && ( <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> )}
               Send Reset Link
             </Button>
           </form>

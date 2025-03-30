@@ -65,20 +65,24 @@ export function AddressForm({ initialData, onSuccess }: AddressFormProps) {
           result = await updateAddress(initialData.id, values);
           if (result && 'id' in result) { // Check if it's an Address object (success)
             toast.success('Address updated successfully!');
-            onSuccess?.();
-          } else {
-            toast.error((result as any)?.error || 'Failed to update address.');
-          }
-        } else {
+             onSuccess?.();
+           } else {
+             // Cast to any to access potential error property
+             const errorMsg = (result as any)?.error || 'Failed to update address.';
+             toast.error(errorMsg);
+           }
+         } else {
           result = await addAddress(values);
           if (result && 'id' in result) {
             toast.success('Address added successfully!');
             form.reset(); // Reset form only on add
-            onSuccess?.();
-          } else {
-             toast.error((result as any)?.error || 'Failed to add address.');
-          }
-        }
+             onSuccess?.();
+           } else {
+              // Cast to any to access potential error property
+              const errorMsg = (result as any)?.error || 'Failed to add address.';
+              toast.error(errorMsg);
+           }
+         }
       } catch (error) {
         console.error('Address form error:', error);
         toast.error('An unexpected error occurred.');

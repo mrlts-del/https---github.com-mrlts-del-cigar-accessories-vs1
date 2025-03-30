@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition } from 'react'; // Import useTransition
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type Row } from '@tanstack/react-table'; // Import Row type
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import {
@@ -33,9 +33,9 @@ function formatDate(date: Date): string {
   }).format(date);
 }
 
-// Actions Cell Component
-const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
-  const order = row.original as OrderColumn;
+// Actions Cell Component - Use specific Row type
+const ActionsCell: React.FC<{ row: Row<OrderColumn> }> = ({ row }) => {
+  const order = row.original; // No need for 'as OrderColumn' cast now
   const [isPending, startTransition] = useTransition();
 
   const handleStatusUpdate = (newStatus: OrderStatus) => {
@@ -72,7 +72,6 @@ const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
             <DropdownMenuItem asChild>
               <Link href={`/admin/orders/${order.id}`}>View Order Details</Link>
             </DropdownMenuItem>
-             {/* Update Status Submenu */}
              <DropdownMenuSub>
           <DropdownMenuSubTrigger disabled={isPending}>
             <span>Update Status</span>

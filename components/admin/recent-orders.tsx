@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Removed AvatarImage
 import { formatCurrency } from '@/lib/utils';
 import type { RecentOrder } from '@/actions/admin'; // Import the type
 

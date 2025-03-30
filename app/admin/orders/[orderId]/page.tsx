@@ -1,9 +1,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getOrderById } from '@/actions/order'; // Import fetch action
-import type { AdminOrderView } from '@/actions/order'; // Import type
+// import type { AdminOrderView } from '@/actions/order'; // Removed unused import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator'; // Removed unused import
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';

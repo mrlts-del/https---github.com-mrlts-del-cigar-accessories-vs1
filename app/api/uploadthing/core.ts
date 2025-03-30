@@ -20,7 +20,7 @@ export const ourFileRouter = {
   // Define as many FileRoutes as you like, each with a unique route slug
   productImageUploader: f({ image: { maxFileSize: '4MB', maxFileCount: 5 } }) // Allow up to 5 images of 4MB each
     // Set permissions and file types for this FileRoute
-    .middleware(async ({ req }) => {
+    .middleware(async (/* { req } */) => { // Remove unused req
       // This code runs on your server before upload
       const user = await getUserAuth();
 

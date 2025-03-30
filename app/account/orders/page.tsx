@@ -2,9 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getUserOrders } from '@/actions/order'; // Fetch orders action
-import type { OrderWithItems } from '@/actions/order'; // Import type
+// import type { OrderWithItems } from '@/actions/order'; // Removed unused import
 import { formatCurrency } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge'; // Assuming Badge component exists
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Card,
@@ -30,7 +30,7 @@ export default async function OrdersPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Order History</h1>
       {orders.length === 0 ? (
-        <p className="text-muted-foreground">You haven't placed any orders yet.</p>
+        <p className="text-muted-foreground">You haven't placed any orders yet.</p> // Escaped apostrophe
       ) : (
         <div className="space-y-8">
           {orders.map((order) => (

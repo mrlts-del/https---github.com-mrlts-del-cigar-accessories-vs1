@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { ProductForm } from '@/components/admin/products/product-form';
 import { db } from '@/lib/db';
-import type { Category } from '@prisma/client';
+// import type { Category } from '@prisma/client'; // Removed unused import
 import { fetchCategories } from '@/actions/category'; // Import fetch action
 
 interface EditProductPageProps {

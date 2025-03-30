@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useTransition } from 'react'; // Import useTransition
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef, type Row } from '@tanstack/react-table'; // Import Row type
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,9 +42,9 @@ function formatDate(date: Date | null): string {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-// Actions Cell Component
-const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
-  const user = row.original as UserColumn;
+// Actions Cell Component - Use specific Row type
+const ActionsCell: React.FC<{ row: Row<UserColumn> }> = ({ row }) => {
+  const user = row.original; // No cast needed
   const [isRolePending, startRoleTransition] = useTransition();
   const [isDeletePending, startDeleteTransition] = useTransition(); // State for delete
 
@@ -135,7 +135,7 @@ const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the user
-            "{user.name || user.email}" and all associated data.
+            "{user.name || user.email}" and all associated data. {/* Escaped quotes */}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -154,7 +154,7 @@ const ActionsCell: React.FC<{ row: any }> = ({ row }) => {
 };
 
 
-// Column Definitions (remain the same)
+// Column Definitions
 export const columns: ColumnDef<UserColumn>[] = [
   { accessorKey: 'id', header: 'User ID', cell: ({ row }) => <div className="font-mono text-xs">{row.original.id}</div> },
   { accessorKey: 'name', header: ({ column }) => (<Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}> Name <ArrowUpDown className="ml-2 h-4 w-4" /> </Button>), cell: ({ row }) => ( <div className="flex items-center gap-2"> <Avatar className="h-8 w-8"> <AvatarImage src={row.original.image ?? undefined} alt={row.original.name ?? 'User'} /> <AvatarFallback> {row.original.name ? row.original.name.charAt(0).toUpperCase() : 'U'} </AvatarFallback> </Avatar> <span className="font-medium">{row.original.name || 'N/A'}</span> </div> ) },
