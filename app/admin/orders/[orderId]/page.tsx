@@ -10,10 +10,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 // TODO: Import component/action for updating status from this page if needed
 
-interface OrderDetailPageProps {
-  params: {
-    orderId: string;
-  };
+// Define props directly for Next.js page component
+interface PageProps {
+  params: { orderId: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 // Helper function to format date (could be moved to utils)
@@ -21,7 +21,8 @@ function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-export default async function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
+// Use the standard PageProps type
+export default async function AdminOrderDetailPage({ params }: PageProps) {
   const { orderId } = params;
   const order = await getOrderById(orderId);
 

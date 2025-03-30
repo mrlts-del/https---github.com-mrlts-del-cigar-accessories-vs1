@@ -78,7 +78,6 @@ export function SignInForm() {
        toast.error(`Failed to sign in with ${provider}. Please try again.`);
        setIsOAuthLoading(null); // Reset loading on error
     }
-    // Don't reset loading on success as it redirects
   }
 
   return (
@@ -104,15 +103,35 @@ export function SignInForm() {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="email" render={({ field }) => ( <FormItem> <FormLabel>Email</FormLabel> <FormControl> <Input type="email" placeholder="m@example.com" {...field} disabled={isLoading || !!isOAuthLoading} /> </FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="password" render={({ field }) => ( <FormItem> <FormLabel>Password</FormLabel> <FormControl> <Input type="password" placeholder="********" {...field} disabled={isLoading || !!isOAuthLoading} /> </FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="email" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <> {/* Wrap Input */}
+                    <Input type="email" placeholder="m@example.com" {...field} disabled={isLoading || !!isOAuthLoading} />
+                  </>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}/>
+            <FormField control={form.control} name="password" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <> {/* Wrap Input */}
+                    <Input type="password" placeholder="********" {...field} disabled={isLoading || !!isOAuthLoading} />
+                  </>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}/>
             <Button type="submit" className="w-full" disabled={isLoading || !!isOAuthLoading}> {isLoading && ( <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> )} Sign In </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 text-sm">
         <p className="text-muted-foreground">
-          Don't have an account?{' '} {/* Escaped apostrophe */}
+          Don't have an account?{' '}
           <a href="/auth/signup" className="font-medium text-primary underline-offset-4 hover:underline"> Sign up </a>
         </p>
          <p>
