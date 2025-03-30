@@ -107,9 +107,7 @@ export function SignInForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <> {/* Wrap Input */}
-                    <Input type="email" placeholder="m@example.com" {...field} disabled={isLoading || !!isOAuthLoading} />
-                  </>
+                  <Input type="email" placeholder="m@example.com" {...field} disabled={isLoading || !!isOAuthLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,9 +116,7 @@ export function SignInForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <> {/* Wrap Input */}
-                    <Input type="password" placeholder="********" {...field} disabled={isLoading || !!isOAuthLoading} />
-                  </>
+                  <Input type="password" placeholder="********" {...field} disabled={isLoading || !!isOAuthLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
