@@ -38,10 +38,12 @@ export default function RootLayout({
           )}
         >
           <Header />
-          {/* Added flex-grow and container */}
-          <main className="container relative flex-grow py-6 md:py-10">
-            {children}
-          </main>
+          {/* Ensure main content area grows and has consistent padding */}
+          <div className="flex-1"> {/* Added wrapper div */}
+             <main className="container relative py-6 md:py-10"> {/* Removed flex-grow */}
+               {children}
+             </main>
+          </div>
           <Footer /> {/* Add Footer component */}
           <Toaster richColors position="top-right" />
         </body>

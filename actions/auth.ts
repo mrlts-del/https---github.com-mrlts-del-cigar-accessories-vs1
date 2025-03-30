@@ -3,11 +3,12 @@
 import * as z from 'zod';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client'; // Import Prisma
 import crypto from 'crypto';
 import { Resend } from 'resend';
-// TODO: Create email templates
-// import PasswordResetEmail from '@/emails/password-reset-email';
+import React from 'react'; // Re-add React import
+import { PasswordResetEmail } from '@/emails/password-reset-email';
+import { WelcomeEmail } from '@/emails/welcome-email'; // Import Welcome Email
 
 // Initialize Resend (ensure RESEND_API_KEY is in .env)
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -19,9 +20,7 @@ const domain = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const RegisterSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
   email: z.string().email({ message: 'Invalid email address.' }),
-  password: z
-    .string()
-    .min(8, { message: 'Password must be at least 8 characters long.' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters long.' }),
 });
 
 const EmailSchema = z.string().email({ message: 'Invalid email address.' });
@@ -29,16 +28,13 @@ const EmailSchema = z.string().email({ message: 'Invalid email address.' });
 const ResetPasswordSchema = z
   .object({
     token: z.string().min(1, { message: 'Token is required.' }),
-    password: z
-      .string()
-      .min(8, { message: 'Password must be at least 8 characters long.' }),
+    password: z.string().min(8, { message: 'Password must be at least 8 characters long.' }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
   });
-
 
 // --- Result Types ---
 
@@ -64,10 +60,29 @@ export async function registerUser(
       return { success: false, error: 'Email already in use.' };
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    await db.user.create({
+    const newUser = await db.user.create({ // Assign result to newUser
       data: { name, email, password: hashedPassword, role: Role.USER },
     });
     console.log('User registered successfully:', email);
+
+    // Send Welcome Email
+    if (resend && newUser.email) {
+      try {
+        await resend.emails.send({
+          from: 'Cigar Accessories <noreply@yourdomain.com>', // TODO: Replace domain
+          to: [newUser.email],
+          subject: 'Welcome to Cigar Accessories!',
+          react: React.createElement(WelcomeEmail, { userName: newUser.name }),
+        });
+        console.log(`Welcome email sent to ${newUser.email}`);
+      } catch (emailError) {
+        console.error(`Failed to send welcome email for user ${newUser.id}:`, emailError);
+        // Log error but don't fail registration if email fails
+      }
+    } else if (!resend) {
+       console.warn(`Resend not configured, skipping welcome email for user ${newUser.id}.`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Error during user registration:', error);
@@ -84,55 +99,29 @@ export async function generatePasswordResetToken(
   email: string
 ): Promise<ActionResult> {
   const validatedEmail = EmailSchema.safeParse(email);
-  if (!validatedEmail.success) {
-    return { success: false, error: 'Invalid email address.' };
-  }
+  if (!validatedEmail.success) { return { success: false, error: 'Invalid email address.' }; }
   const userEmail = validatedEmail.data;
-
   const user = await db.user.findUnique({ where: { email: userEmail } });
-  if (!user) {
-    console.warn(`Password reset requested for non-existent email: ${userEmail}`);
-    return { success: true }; // Pretend success
-  }
-
+  if (!user) { console.warn(`Password reset requested for non-existent email: ${userEmail}`); return { success: true }; }
   const token = crypto.randomBytes(32).toString('hex');
-  const expires = new Date(Date.now() + 3600 * 1000); // 1 hour expiry
-
+  const expires = new Date(Date.now() + 3600 * 1000);
   try {
     await db.$transaction([
       db.passwordResetToken.deleteMany({ where: { email: userEmail } }),
       db.passwordResetToken.create({ data: { email: userEmail, token, expires } }),
     ]);
-  } catch (dbError) {
-    console.error('Failed to store password reset token:', dbError);
-    return { success: false, error: 'Database error.' };
-  }
-
-  if (!resend) {
-     console.error('Resend is not initialized. RESEND_API_KEY missing?');
-     return { success: false, error: 'Email service not configured.' };
-  }
-
+  } catch (dbError) { console.error('Failed to store password reset token:', dbError); return { success: false, error: 'Database error.' }; }
+  if (!resend) { console.error('Resend is not initialized. RESEND_API_KEY missing?'); return { success: false, error: 'Email service not configured.' }; }
   const resetLink = `${domain}/auth/reset-password?token=${token}`;
-
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Cigar Accessories <noreply@yourdomain.com>', // TODO: Replace with your verified domain
-      to: [userEmail],
-      subject: 'Reset Your Password',
-      html: `<p>Click the link below to reset your password:</p><a href="${resetLink}">${resetLink}</a><p>This link expires in 1 hour.</p>`,
+      from: 'Cigar Accessories <noreply@yourdomain.com>', to: [userEmail], subject: 'Reset Your Password',
+      react: React.createElement(PasswordResetEmail, { resetLink }),
     });
-
-    if (error) {
-      console.error('Resend error:', error);
-      return { success: false, error: 'Failed to send reset email.' };
-    }
+    if (error) { console.error('Resend error:', error); return { success: false, error: 'Failed to send reset email.' }; }
     console.log('Password reset email sent successfully to:', userEmail, 'ID:', data?.id);
     return { success: true };
-  } catch (emailError) {
-    console.error('Error sending password reset email:', emailError);
-    return { success: false, error: 'Failed to send reset email.' };
-  }
+  } catch (emailError) { console.error('Error sending password reset email:', emailError); return { success: false, error: 'Failed to send reset email.' }; }
 }
 
 /**
@@ -141,59 +130,26 @@ export async function generatePasswordResetToken(
 export async function resetPassword(
   values: z.infer<typeof ResetPasswordSchema>
 ): Promise<ActionResult> {
-  // 1. Validate input
   const validatedFields = ResetPasswordSchema.safeParse(values);
-  if (!validatedFields.success) {
-    return { success: false, error: 'Invalid input.' };
-  }
+  if (!validatedFields.success) { return { success: false, error: 'Invalid input.' }; }
   const { token, password } = validatedFields.data;
-
-  // 2. Find the token in the database
-  const existingToken = await db.passwordResetToken.findUnique({
-    where: { token },
-  });
-
-  if (!existingToken) {
-    return { success: false, error: 'Invalid or expired token.' };
-  }
-
-  // 3. Check if token has expired
+  const existingToken = await db.passwordResetToken.findUnique({ where: { token } });
+  if (!existingToken) { return { success: false, error: 'Invalid or expired token.' }; }
   const hasExpired = new Date(existingToken.expires) < new Date();
-  if (hasExpired) {
-    // Optionally delete expired token here
-    await db.passwordResetToken.delete({ where: { id: existingToken.id } }).catch((e: any) => console.error("Failed to delete expired token:", e)); // Add type for 'e'
-    return { success: false, error: 'Token has expired.' };
-  }
-
-  // 4. Find the user associated with the token
-  const user = await db.user.findUnique({
-    where: { email: existingToken.email },
-  });
-
-  if (!user) {
-    // Should not happen if token exists, but good to check
-    return { success: false, error: 'User not found.' };
-  }
-
-  // 5. Hash the new password
+  if (hasExpired) { await db.passwordResetToken.delete({ where: { id: existingToken.id } }).catch(e => console.error("Failed to delete expired token:", e)); return { success: false, error: 'Token has expired.' }; }
+  const user = await db.user.findUnique({ where: { email: existingToken.email } });
+  if (!user) { return { success: false, error: 'User not found.' }; }
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  // 6. Update user's password and delete the token in a transaction
   try {
     await db.$transaction([
-      db.user.update({
-        where: { id: user.id },
-        data: { password: hashedPassword },
-      }),
-      db.passwordResetToken.delete({
-        where: { id: existingToken.id },
-      }),
+      db.user.update({ where: { id: user.id }, data: { password: hashedPassword } }),
+      db.passwordResetToken.delete({ where: { id: existingToken.id } }),
     ]);
-
     console.log('Password reset successfully for user:', user.email);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error resetting password:', error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') { return { success: false, error: 'User not found.' }; }
     return { success: false, error: 'Failed to update password.' };
   }
 }

@@ -1,14 +1,18 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// TODO: Import Recharts components
-// TODO: Import server actions to fetch dashboard data
+import { getDashboardMetrics, getMonthlySales, getRecentOrders } from '@/actions/admin'; // Import actions
+import { formatCurrency } from '@/lib/utils';
+import { DollarSign, ShoppingBag, Users, Package } from 'lucide-react';
+import { SalesChart } from '@/components/admin/sales-chart';
+import { RecentOrders } from '@/components/admin/recent-orders'; // Import recent orders component
 
 export default async function AdminDashboardPage() {
-  // TODO: Fetch dashboard data (e.g., total revenue, orders, users)
-  const totalRevenue = 0; // Placeholder
-  const totalOrders = 0; // Placeholder
-  const totalUsers = 0; // Placeholder
-  const totalProducts = 0; // Placeholder
+  // Fetch dashboard data in parallel
+  const [metrics, monthlySales, recentOrders] = await Promise.all([
+    getDashboardMetrics(),
+    getMonthlySales(),
+    getRecentOrders(), // Fetch recent orders
+  ]);
 
   return (
     <div className="space-y-6">
@@ -19,41 +23,37 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            {/* TODO: Add Icon */}
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
-            {/* <p className="text-xs text-muted-foreground">+20.1% from last month</p> */}
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue)}</div>
           </CardContent>
         </Card>
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-             {/* TODO: Add Icon */}
+             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalOrders}</div>
-             {/* <p className="text-xs text-muted-foreground">+10% from last month</p> */}
+            <div className="text-2xl font-bold">{metrics.totalOrders}</div>
           </CardContent>
         </Card>
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-             {/* TODO: Add Icon */}
+             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
-             {/* <p className="text-xs text-muted-foreground">+50 since last hour</p> */}
+            <div className="text-2xl font-bold">{metrics.totalUsers}</div>
           </CardContent>
         </Card>
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-             {/* TODO: Add Icon */}
+             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalProducts}</div>
-             {/* <p className="text-xs text-muted-foreground">Active products</p> */}
+            <div className="text-2xl font-bold">{metrics.totalProducts}</div>
           </CardContent>
         </Card>
       </div>
@@ -62,20 +62,18 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
          <Card>
            <CardHeader>
-             <CardTitle>Sales Overview</CardTitle>
+             <CardTitle>Sales Overview (Last 12 Months)</CardTitle>
            </CardHeader>
-           <CardContent className="h-[350px]">
-             {/* TODO: Implement Recharts Sales Chart */}
-             <p className="text-center text-muted-foreground">(Sales chart placeholder)</p>
+           <CardContent className="pl-2">
+             <SalesChart data={monthlySales} />
            </CardContent>
          </Card>
           <Card>
            <CardHeader>
              <CardTitle>Recent Orders</CardTitle>
            </CardHeader>
-           <CardContent className="h-[350px]">
-             {/* TODO: Implement Recent Orders List/Table */}
-             <p className="text-center text-muted-foreground">(Recent orders placeholder)</p>
+           <CardContent> {/* Removed fixed height */}
+             <RecentOrders orders={recentOrders} /> {/* Render recent orders */}
            </CardContent>
          </Card>
       </div>

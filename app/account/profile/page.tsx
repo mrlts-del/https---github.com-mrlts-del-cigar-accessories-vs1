@@ -1,30 +1,42 @@
 import React from 'react';
-import getServerSession from 'next-auth'; // Use default import
+import getServerSession from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import type { Session } from 'next-auth'; // Import augmented Session type
+import type { Session } from 'next-auth';
 import { redirect } from 'next/navigation';
-// TODO: Import ProfileForm component
+import { ProfileForm } from '@/components/account/profile-form'; // Import form
+import type { User } from '@prisma/client'; // Import User for type assertion
 
 export default async function ProfilePage() {
-  // Fetch session server-side
   const session = (await getServerSession(authOptions)) as unknown as Session | null;
 
-  // Redirect if not logged in (middleware should also handle this, but good practice)
   if (!session?.user) {
     redirect('/auth/signin?callbackUrl=/account/profile');
   }
 
+  // We need to pass the user object to the form, excluding sensitive fields
+  // The session object might not have all User fields, adjust as needed
+  // or fetch the full user object from DB if necessary.
+  const userForForm: Omit<User, 'password' | 'emailVerified'> = {
+     id: session.user.id,
+     name: session.user.name ?? null, // Ensure null if undefined
+     email: session.user.email ?? null, // Ensure null if undefined
+     image: session.user.image ?? null, // Ensure null if undefined
+     role: session.user.role, // Role comes from our augmented session
+     // Add default/null values for other non-sensitive User fields if ProfileForm expects them
+     // For now, assuming ProfileForm only needs id, name, email, image, role
+     createdAt: new Date(), // Placeholder, not needed by form but part of User type
+     updatedAt: new Date(), // Placeholder, not needed by form but part of User type
+  };
+
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Profile</h1>
-      <p className="text-muted-foreground">Manage your account details.</p>
-      {/* TODO: Render ProfileForm component */}
-      <div className="rounded border p-8 shadow">
-         <p>Name: {session.user.name ?? 'Not set'}</p>
-         <p>Email: {session.user.email ?? 'Not set'}</p>
-         <p>Role: {session.user.role ?? 'USER'}</p>
-         <p className="mt-4 text-center text-muted-foreground">(Profile editing form will go here)</p>
+      <div> {/* Wrap heading and description */}
+         <h1 className="text-2xl font-semibold">Profile</h1>
+         <p className="text-muted-foreground">Manage your account details.</p>
       </div>
+      {/* Render ProfileForm component */}
+      <ProfileForm user={userForForm} />
     </div>
   );
 }

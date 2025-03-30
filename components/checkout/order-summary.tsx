@@ -6,8 +6,13 @@ import { useCartStore } from '@/store/cart-store';
 import { formatCurrency } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { ShippingOption } from './shipping-step'; // Import type
 
-export function OrderSummary() {
+interface OrderSummaryProps {
+  selectedShippingOption?: ShippingOption | null; // Make optional
+}
+
+export function OrderSummary({ selectedShippingOption }: OrderSummaryProps) {
   const { items, totalPrice } = useCartStore();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -16,7 +21,8 @@ export function OrderSummary() {
   }, []);
 
   const cartTotal = isMounted ? totalPrice() : 0;
-  const shippingCost = 0; // TODO: Implement shipping cost calculation
+  // Use selected shipping option price, default to 0 if not selected/mounted
+  const shippingCost = isMounted && selectedShippingOption ? selectedShippingOption.price : 0;
   const taxes = 0; // TODO: Implement tax calculation
   const orderTotal = cartTotal + shippingCost + taxes;
 
@@ -33,7 +39,7 @@ export function OrderSummary() {
   return (
     <div className="rounded border p-6 shadow">
       <h2 className="mb-4 text-xl font-semibold">Order Summary</h2>
-      <ScrollArea className="h-[300px] pr-4"> {/* Adjust height as needed */}
+      <ScrollArea className="h-[300px] pr-4">
         <div className="space-y-4">
           {items.map((item) => (
             <div key={item.id} className="flex items-center gap-4">
@@ -51,7 +57,6 @@ export function OrderSummary() {
               </div>
               <div className="flex-grow overflow-hidden">
                 <p className="truncate font-medium">{item.name}</p>
-                {/* Optional: Show variant info if applicable */}
               </div>
               <p className="flex-shrink-0 text-sm font-medium">
                 {formatCurrency(item.price * item.quantity)}
@@ -68,7 +73,11 @@ export function OrderSummary() {
         </div>
         <div className="flex justify-between text-muted-foreground">
           <span>Shipping</span>
-          <span>{shippingCost === 0 ? 'Free' : formatCurrency(shippingCost)}</span>
+          {/* Display selected option name if available */}
+          <span>
+             {selectedShippingOption ? `${selectedShippingOption.name} - ` : ''}
+             {shippingCost === 0 ? 'Free' : formatCurrency(shippingCost)}
+          </span>
         </div>
         <div className="flex justify-between text-muted-foreground">
           <span>Taxes</span>

@@ -4,76 +4,63 @@ import React, { useState } from 'react';
 import { OrderSummary } from '@/components/checkout/order-summary';
 import { AddressStep } from '@/components/checkout/address-step';
 import { CheckoutForm } from '@/components/checkout/checkout-form';
-// TODO: Import ShippingStep, ReviewStep
+import { ShippingStep, type ShippingOption } from '@/components/checkout/shipping-step';
+import { ReviewStep } from '@/components/checkout/review-step'; // Import ReviewStep
 
 export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
   const [currentStep, setCurrentStep] = useState<'address' | 'shipping' | 'payment' | 'review'>('address');
   const [orderId, setOrderId] = useState<string | null>(null); // Store created order ID
 
   const handleAddressSelect = (addressId: string) => {
     setSelectedAddressId(addressId);
-    console.log('Selected Address ID:', addressId);
-    // Skip shipping for now
+    setCurrentStep('shipping');
+  };
+
+  const handleShippingSelect = (option: ShippingOption) => {
+    setSelectedShippingOption(option);
     setCurrentStep('payment');
   };
 
-  // TODO: Implement handleShippingSelect
-
-  // Renamed handler and updated logic
   const handleOrderCreated = (createdOrderId: string) => {
-    console.log('Order created successfully! Order ID:', createdOrderId);
     setOrderId(createdOrderId);
-    // setCurrentStep('review'); // Move to review step
-    // Or redirect to a success page immediately
-    // router.push(`/order/success?orderId=${createdOrderId}`);
-    // For now, just log and maybe show a success message or move to a placeholder review step
-    setCurrentStep('review'); // Go to placeholder review step
+    setCurrentStep('review'); // Move to review/confirmation step
   };
 
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-semibold">Checkout</h1>
+      {/* Hide title on review step? */}
+      {currentStep !== 'review' && (
+         <h1 className="mb-6 text-3xl font-semibold">Checkout</h1>
+      )}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Main Content (Steps, Forms) */}
         <div className="lg:col-span-2">
           {currentStep === 'address' && (
             <AddressStep onAddressSelect={handleAddressSelect} />
           )}
-          {/* TODO: Render ShippingStep */}
-          {currentStep === 'shipping' && (
-             <div className="rounded border p-8 shadow">
-               <p className="text-center text-muted-foreground">
-                 Step: {currentStep} (Shipping Component not implemented yet)
-               </p>
-             </div>
+          {currentStep === 'shipping' && selectedAddressId && (
+             <ShippingStep onShippingSelect={handleShippingSelect} />
            )}
-
-          {/* Render PaymentStep via CheckoutForm */}
-          {currentStep === 'payment' && selectedAddressId && (
+          {currentStep === 'payment' && selectedAddressId && selectedShippingOption && (
             <CheckoutForm
-              addressId={selectedAddressId} // Pass selected address ID
-              onOrderCreated={handleOrderCreated} // Pass the correct handler
+              addressId={selectedAddressId}
+              // Pass shippingOption if needed by createOrder or payment intent
+              onOrderCreated={handleOrderCreated}
             />
           )}
-
-          {/* TODO: Render ReviewStep */}
            {currentStep === 'review' && orderId && (
-             <div className="rounded border p-8 shadow">
-               <h2 className="text-xl font-semibold mb-4">Order Confirmed!</h2>
-               <p className="text-center text-muted-foreground">
-                 Your order (ID: {orderId}) has been placed successfully.
-                 (Review Component not implemented yet)
-               </p>
-               {/* Add link to order details page */}
-             </div>
+             <ReviewStep orderId={orderId} /> // Render ReviewStep
            )}
         </div>
 
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <OrderSummary />
-        </div>
+        {/* Order Summary (Hide on review step?) */}
+        {currentStep !== 'review' && (
+           <div className="lg:col-span-1">
+             <OrderSummary selectedShippingOption={selectedShippingOption} />
+           </div>
+        )}
       </div>
     </div>
   );

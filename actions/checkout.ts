@@ -2,11 +2,13 @@
 
 import Stripe from 'stripe';
 import { z } from 'zod';
-// Removed useCartStore import as it's client-side only
 import { getCurrentUserId } from '@/lib/auth-utils';
 import { db } from '@/lib/db';
-import { Prisma, OrderStatus } from '@prisma/client'; // Import OrderStatus
+import { Prisma, OrderStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { Resend } from 'resend'; // Import Resend
+import { OrderConfirmationEmail } from '@/emails/order-confirmation-email'; // Import Email Component
+import React from 'react'; // Import React
 
 // Initialize Stripe
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -18,9 +20,11 @@ const stripe = new Stripe(stripeSecretKey, {
   typescript: true,
 });
 
-// --- Schemas ---
+// Initialize Resend
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-// Input for creating the order - requires items to recalculate price server-side
+// --- Schemas ---
 const CreateOrderSchema = z.object({
   paymentIntentId: z.string(),
   addressId: z.string(),
@@ -29,48 +33,23 @@ const CreateOrderSchema = z.object({
     quantity: z.number().min(1),
   })).min(1, 'Cannot create order with empty cart'),
 });
-
 type CreateOrderInput = z.infer<typeof CreateOrderSchema>;
 
 // --- Result Types ---
-
-interface PaymentIntentResult {
-  success: boolean;
-  clientSecret?: string | null;
-  error?: string;
-}
-
-interface CreateOrderResult {
-  success: boolean;
-  orderId?: string;
-  error?: string;
-}
+interface PaymentIntentResult { success: boolean; clientSecret?: string | null; error?: string; }
+interface CreateOrderResult { success: boolean; orderId?: string; error?: string; }
 
 // --- Server Actions ---
 
-/**
- * Creates a Stripe Payment Intent.
- * Amount calculation MUST happen server-side before calling this or be recalculated within.
- */
-export async function createPaymentIntent(
-  amountInCents: number
-): Promise<PaymentIntentResult> {
+/** Creates a Stripe Payment Intent. */
+export async function createPaymentIntent(amountInCents: number): Promise<PaymentIntentResult> {
   const userId = await getCurrentUserId();
-  if (!userId) {
-    return { success: false, error: 'User not authenticated.' };
-  }
-
-  // Basic validation for amount
-  if (amountInCents <= 0) {
-     return { success: false, error: 'Invalid order amount.' };
-  }
-
+  if (!userId) return { success: false, error: 'User not authenticated.' };
+  if (amountInCents <= 0) return { success: false, error: 'Invalid order amount.' };
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents,
-      currency: 'usd',
-      automatic_payment_methods: { enabled: true },
-      metadata: { userId },
+      amount: amountInCents, currency: 'usd',
+      automatic_payment_methods: { enabled: true }, metadata: { userId },
     });
     return { success: true, clientSecret: paymentIntent.client_secret };
   } catch (error: any) {
@@ -79,99 +58,81 @@ export async function createPaymentIntent(
   }
 }
 
-/**
- * Verifies payment intent and creates an order in the database.
- */
-export async function createOrder(
-  values: CreateOrderInput
-): Promise<CreateOrderResult> {
+/** Verifies payment intent, creates order, and sends confirmation email. */
+export async function createOrder(values: CreateOrderInput): Promise<CreateOrderResult> {
   const userId = await getCurrentUserId();
-  if (!userId) {
-    return { success: false, error: 'User not authenticated.' };
-  }
+  if (!userId) return { success: false, error: 'User not authenticated.' };
 
-  // 1. Validate input
   const validatedData = CreateOrderSchema.safeParse(values);
-  if (!validatedData.success) {
-    return { success: false, error: 'Invalid input data.' };
-  }
+  if (!validatedData.success) return { success: false, error: 'Invalid input data.' };
   const { paymentIntentId, addressId, items } = validatedData.data;
 
   try {
-    // 2. Verify Payment Intent with Stripe
+    // Verify Payment Intent
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-    if (!paymentIntent) {
-      return { success: false, error: 'Invalid Payment Intent ID.' };
-    }
-    if (paymentIntent.metadata.userId !== userId) {
-       return { success: false, error: 'Payment does not belong to user.' };
-    }
-    if (paymentIntent.status !== 'succeeded') {
-      return { success: false, error: `Payment not successful (Status: ${paymentIntent.status}).` };
+    if (!paymentIntent || paymentIntent.metadata.userId !== userId || paymentIntent.status !== 'succeeded') {
+      return { success: false, error: 'Invalid or unsuccessful payment.' };
     }
 
-    // 3. Recalculate total server-side for verification
+    // Recalculate total server-side
     let serverCalculatedTotal = 0;
     const productIds = items.map(item => item.productId);
     const products = await db.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, price: true /* , stock: true */ }, // Select stock if checking availability
+      select: { id: true, price: true },
     });
-
     const orderItemsData: Prisma.OrderItemCreateManyOrderInput[] = [];
-
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
-      if (!product) {
-        return { success: false, error: `Product with ID ${item.productId} not found.` };
-      }
-      // TODO: Check stock if implementing inventory management
-      // if (product.stock < item.quantity) {
-      //    return { success: false, error: `Insufficient stock for ${product.name}.` };
-      // }
-      const itemTotal = product.price * item.quantity;
-      serverCalculatedTotal += itemTotal;
-      orderItemsData.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: product.price, // Store price at time of purchase
-      });
+      if (!product) return { success: false, error: `Product ID ${item.productId} not found.` };
+      serverCalculatedTotal += product.price * item.quantity;
+      orderItemsData.push({ productId: item.productId, quantity: item.quantity, price: product.price });
     }
-
-    // Convert server total to cents for comparison
     const serverCalculatedTotalCents = Math.round(serverCalculatedTotal * 100);
 
-    // 4. Compare server total with Payment Intent amount
+    // Compare amounts
     if (serverCalculatedTotalCents !== paymentIntent.amount) {
-      // Handle discrepancy - log, potentially refund, return error
       console.error(`Amount mismatch! Server: ${serverCalculatedTotalCents}, Stripe: ${paymentIntent.amount}. PI: ${paymentIntentId}`);
-      // TODO: Consider refunding paymentIntent here if possible
-      return { success: false, error: 'Order amount mismatch. Please contact support.' };
+      return { success: false, error: 'Order amount mismatch.' };
     }
 
-    // 5. Create Order and OrderItems in DB within a transaction
+    // Create Order in DB
     const newOrder = await db.order.create({
       data: {
-        userId: userId,
-        addressId: addressId,
-        total: serverCalculatedTotal, // Store final calculated total (e.g., float)
-        status: OrderStatus.PROCESSING, // Or PENDING until shipment?
-        stripePaymentIntentId: paymentIntentId,
-        items: {
-          createMany: {
-            data: orderItemsData,
-          },
-        },
+        userId, addressId, total: serverCalculatedTotal,
+        status: OrderStatus.PROCESSING, stripePaymentIntentId: paymentIntentId,
+        items: { createMany: { data: orderItemsData } },
       },
-      select: { id: true }, // Only select the ID of the new order
+      // Include necessary data for the email
+      include: {
+         user: { select: { email: true, name: true } },
+         address: true,
+         items: { include: { product: { select: { name: true, images: { take: 1, select: { url: true } } } } } }
+      }
     });
 
-    // TODO: Decrement stock levels here if implementing inventory management
-
     console.log(`Order ${newOrder.id} created successfully for user ${userId}`);
-    // Revalidate user's order history page
     revalidatePath('/account/orders');
+
+    // Send Confirmation Email
+    if (resend && newOrder.user?.email) {
+      try {
+        await resend.emails.send({
+          from: 'Cigar Accessories <noreply@yourdomain.com>', // TODO: Replace domain
+          to: [newOrder.user.email],
+          subject: `Order Confirmation #${newOrder.id.substring(0, 8)}`,
+          react: React.createElement(OrderConfirmationEmail, { order: newOrder as any }), // Cast needed due to include structure
+        });
+        console.log(`Order confirmation email sent to ${newOrder.user.email}`);
+      } catch (emailError) {
+        console.error(`Failed to send order confirmation email for order ${newOrder.id}:`, emailError);
+        // Don't fail the whole process if email fails, just log it
+      }
+    } else if (!resend) {
+       console.warn(`Resend not configured, skipping order confirmation email for order ${newOrder.id}.`);
+    } else if (!newOrder.user?.email) {
+       console.warn(`User email not found for order ${newOrder.id}, skipping confirmation email.`);
+    }
 
     return { success: true, orderId: newOrder.id };
 
@@ -181,4 +142,4 @@ export async function createOrder(
   }
 }
 
-// TODO: Add Stripe Webhook handler for asynchronous events
+// TODO: Add Stripe Webhook handler
