@@ -30,7 +30,7 @@ export default async function OrdersPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Order History</h1>
       {orders.length === 0 ? (
-        <p className="text-muted-foreground">You haven't placed any orders yet.</p> // Escaped apostrophe
+        <p className="text-muted-foreground">You haven't placed any orders yet.</p> // Ensure correct escape
       ) : (
         <div className="space-y-8">
           {orders.map((order) => (

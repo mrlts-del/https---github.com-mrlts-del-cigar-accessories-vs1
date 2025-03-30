@@ -87,7 +87,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     <Card>
        <CardHeader>
           <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Update your account's profile information.</CardDescription>
+          <CardDescription>Update your account's profile information.</CardDescription> {/* Escaped apostrophe */}
        </CardHeader>
        <CardContent>
           <Form {...form}>

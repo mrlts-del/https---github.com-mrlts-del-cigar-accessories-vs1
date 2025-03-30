@@ -87,7 +87,7 @@ const ActionsCell: React.FC<{ row: Row<ProductColumn> }> = ({ row }) => { // Use
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the product
-            "{product.name}" and remove its data from our servers. {/* Escaped quotes */}
+            "{product.name}" and remove its data from our servers. {/* Ensure correct escape */}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

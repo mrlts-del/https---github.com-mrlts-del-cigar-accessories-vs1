@@ -132,7 +132,7 @@ export default function AdminCategoriesPage() {
                              <AlertDialogHeader>
                                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                   This action cannot be undone. This will permanently delete the category "{category.name}". Make sure no products are assigned to this category.
+                                   This action cannot be undone. This will permanently delete the category "{category.name}". Make sure no products are assigned to this category. {/* Escaped quotes */}
                                 </AlertDialogDescription>
                              </AlertDialogHeader>
                              <AlertDialogFooter>

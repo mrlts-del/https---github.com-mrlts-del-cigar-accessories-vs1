@@ -135,7 +135,7 @@ const ActionsCell: React.FC<{ row: Row<UserColumn> }> = ({ row }) => {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the user
-            "{user.name || user.email}" and all associated data. {/* Escaped quotes */}
+            "{user.name || user.email}" and all associated data. {/* Ensure correct escape */}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

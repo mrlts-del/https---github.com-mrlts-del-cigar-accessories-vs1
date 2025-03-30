@@ -160,7 +160,7 @@ export function ProductForm({ initialData, categories }: ProductFormProps) {
                          )}
                          <UploadDropzone
                             endpoint="productImageUploader"
-                            // Revert to using 'any' for now
+                            // Revert to using 'any' as UploadFileResponse is not correct
                             onClientUploadComplete={(res: any) => {
                                if (res) {
                                   // Assuming res is an array of objects with key and url

@@ -67,8 +67,8 @@ export function AddressForm({ initialData, onSuccess }: AddressFormProps) {
             toast.success('Address updated successfully!');
              onSuccess?.();
            } else {
-             // Cast to any to access potential error property
-             const errorMsg = (result as any)?.error || 'Failed to update address.';
+             // Type assertion for the error case
+             const errorMsg = (result as { error?: string } | null)?.error || 'Failed to update address.';
              toast.error(errorMsg);
            }
          } else {
@@ -78,8 +78,8 @@ export function AddressForm({ initialData, onSuccess }: AddressFormProps) {
             form.reset(); // Reset form only on add
              onSuccess?.();
            } else {
-              // Cast to any to access potential error property
-              const errorMsg = (result as any)?.error || 'Failed to add address.';
+              // Type assertion for the error case
+              const errorMsg = (result as { error?: string } | null)?.error || 'Failed to add address.';
               toast.error(errorMsg);
            }
          }
