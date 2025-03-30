@@ -2,11 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
-    // This will disable ESLint checking during the build process
+    // Keep ESLint disabled during build as per guide
     ignoreDuringBuilds: true,
   },
+  // Remove the typescript block entirely to re-enable TS checks (default is false)
+  // typescript: {
+  //   ignoreBuildErrors: false,
+  // },
   experimental: {
-    // These settings help with prerender errors
+    // Keep these experimental flags
     workerThreads: false,
     cpus: 1
   },
