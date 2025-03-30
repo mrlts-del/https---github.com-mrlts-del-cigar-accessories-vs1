@@ -50,14 +50,15 @@ export const authOptions = {
       //   password: { label: "Password", type: "password" }
       // },
       async authorize(credentials): Promise<NextAuthUser | null> {
-        // Type check is still important here
-        if (!credentials?.email || typeof credentials.password !== 'string') {
-          console.error("Missing or invalid credentials");
+        // Add explicit check for email being a string
+        if (!credentials?.email || typeof credentials.email !== 'string' || typeof credentials.password !== 'string') {
+          console.error("Missing or invalid credentials (email or password not a string)");
           return null;
         }
+        // Now we know credentials.email is a string
         try {
           const user = await db.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: credentials.email } // Use the validated string
           });
           if (!user || !user.password) {
             console.error("User not found or no password set for:", credentials.email);
