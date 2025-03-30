@@ -1,7 +1,8 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import getServerSession from 'next-auth'; // Use default import
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Import authOptions
 import { getOrderById } from '@/actions/order'; // Import fetch action
-// import type { AdminOrderView } from '@/actions/order'; // Removed unused import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 // import { Separator } from '@/components/ui/separator'; // Removed unused import
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,10 @@ function formatDate(date: Date): string {
 
 // Use the standard PageProps type
 export default async function AdminOrderDetailPage({ params }: PageProps) {
+  // Example of getting session server-side (though not strictly needed for this page's logic)
+  const session = await getServerSession(authOptions);
+  // You could add checks here based on session if needed
+
   const { orderId } = params;
   const order = await getOrderById(orderId);
 

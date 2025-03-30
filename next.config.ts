@@ -2,14 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    // Re-enable TypeScript errors during build
+    // ignoreBuildErrors: true, // Removed
   },
   experimental: {
-    // This helps when there are issues with prerendering
+    // Keep these experimental flags for now
     workerThreads: false,
     cpus: 1
   },

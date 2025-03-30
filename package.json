@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "clean": "rm -rf .next",
-    "build": "prisma generate && next build --no-lint",
+    "build": "prisma generate && next build",
     "vercel-build": "npm run clean && npm run build",
     "start": "next start",
     "lint": "next lint"
