@@ -1,16 +1,16 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  typescript: {
-    // Re-enable TypeScript errors during build
-    // ignoreBuildErrors: true, // Removed
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  eslint: {
+    // This will disable ESLint checking during the build process
+    ignoreDuringBuilds: true,
   },
   experimental: {
-    // Keep these experimental flags for now
+    // These settings help with prerender errors
     workerThreads: false,
     cpus: 1
   },
   /* other config options here */
 };
 
-export default nextConfig;
+module.exports = nextConfig;

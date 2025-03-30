@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import getServerSession from 'next-auth'; // Use default import
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Import authOptions
+import { authOptions } from '@/lib/auth'; // Correct import path for authOptions
 import { getOrderById } from '@/actions/order'; // Import fetch action
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 // import { Separator } from '@/components/ui/separator'; // Removed unused import
