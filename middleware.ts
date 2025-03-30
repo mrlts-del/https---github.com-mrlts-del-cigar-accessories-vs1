@@ -65,20 +65,11 @@ export async function middleware(request: NextRequest) {
 }
 
 // Configure which paths the middleware should run on.
-// This matcher needs to cover all paths *except* the ones explicitly allowed above.
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes) - Handled in middleware logic
-     * - _next/static (static files) - Handled in middleware logic
-     * - _next/image (image optimization files) - Handled in middleware logic
-     * - Files with extensions (e.g., favicon.ico, image.png) - Handled in middleware logic
-     *
-     * This simplified matcher covers most application routes.
-     */
-    '/((?!api|_next/static|_next/image|.*\\..*).*)',
-    // Explicitly include root if needed, otherwise the above pattern covers it
-     '/',
+    '/account/:path*', // Protect all account pages
+    '/admin/:path*',   // Protect all admin pages
+    '/checkout/:path*', // Protect checkout page(s)
+    // Add other specific paths to protect if needed
   ],
 };
