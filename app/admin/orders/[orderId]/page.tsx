@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Metadata, ResolvingMetadata } from 'next'; // Import Next.js types
+
 // TODO: Import component/action for updating status from this page if needed
 
-// Define props directly for Next.js page component
+// Use standard Next.js PageProps type structure
 interface PageProps {
   params: { orderId: string };
   searchParams?: { [key: string]: string | string[] | undefined };
