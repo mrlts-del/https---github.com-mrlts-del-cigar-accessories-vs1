@@ -82,14 +82,15 @@ export const authOptions = {
         };
       },
     }),
-    GoogleProvider({
-      clientId: getEnvVar('GOOGLE_CLIENT_ID'),
-      clientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
-    }),
-    GitHubProvider({
-      clientId: getEnvVar('GITHUB_CLIENT_ID'),
-      clientSecret: getEnvVar('GITHUB_CLIENT_SECRET'),
-    }),
+    // Temporarily comment out OAuth providers to isolate issue
+    // GoogleProvider({
+    //   clientId: getEnvVar('GOOGLE_CLIENT_ID'),
+    //   clientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
+    // }),
+    // GitHubProvider({
+    //   clientId: getEnvVar('GITHUB_CLIENT_ID'),
+    //   clientSecret: getEnvVar('GITHUB_CLIENT_SECRET'),
+    // }),
   ],
   session: {
     strategy: 'jwt' as const,

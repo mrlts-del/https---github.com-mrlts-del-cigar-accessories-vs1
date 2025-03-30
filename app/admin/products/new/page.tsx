@@ -1,7 +1,9 @@
 import React from 'react';
 import { ProductForm } from '@/components/admin/products/product-form';
-// import type { Category } from '@prisma/client'; // Removed unused import
 import { fetchCategories } from '@/actions/category'; // Import fetch action
+
+// Force dynamic rendering as suggested by guide
+export const dynamic = 'force-dynamic';
 
 export default async function AddProductPage() {
   // Fetch categories for the dropdown
