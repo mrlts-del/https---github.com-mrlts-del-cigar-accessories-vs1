@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { SessionProvider } from 'next-auth/react'; // Import SessionProvider
-import { Toaster } from '@/components/ui/sonner'; // Import Toaster
-import { cn } from '@/lib/utils'; // Import cn utility
-import { Header } from '@/components/layout/header'; // Import Header
-import { Footer } from '@/components/layout/footer'; // Import Footer
+import { SessionProvider } from 'next-auth/react';
+import { Toaster } from '@/components/ui/sonner';
+import { cn } from '@/lib/utils';
+import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Cigar Accessories E-commerce', // Updated title
-  description: 'Your one-stop shop for cigar accessories', // Updated description
+  title: 'Cigar Accessories E-commerce',
+  description: 'Your one-stop shop for cigar accessories',
 };
 
 export default function RootLayout({
@@ -29,22 +29,21 @@ export default function RootLayout({
 }>) {
   return (
     <SessionProvider>
-      <html lang="en" suppressHydrationWarning className="h-full"> {/* Added h-full */}
+      <html lang="en" suppressHydrationWarning className="h-full">
         <body
           className={cn(
-            'relative flex min-h-full flex-col bg-background font-sans antialiased', // Added flex structure
+            'relative flex min-h-full flex-col bg-background font-sans antialiased',
             geistSans.variable,
             geistMono.variable
           )}
         >
           <Header />
-          {/* Ensure main content area grows and has consistent padding */}
-          <div className="flex-1"> {/* Added wrapper div */}
-             <main className="container relative py-6 md:py-10"> {/* Removed flex-grow */}
+          <div className="flex-1">
+             <main className="container relative py-6 md:py-10">
                {children}
              </main>
           </div>
-          <Footer /> {/* Add Footer component */}
+          <Footer />
           <Toaster richColors position="top-right" />
         </body>
       </html>
