@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  experimental: {
+    // This helps when there are issues with prerendering
+    workerThreads: false,
+    cpus: 1
+  },
   /* other config options here */
 };
 

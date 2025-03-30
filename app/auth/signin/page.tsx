@@ -2,6 +2,9 @@ import React, { Suspense } from 'react'; // Import Suspense
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { Icons } from '@/components/icons'; // For loading fallback
 
+// Force dynamic rendering to avoid prerender issues with useSearchParams
+export const dynamic = 'force-dynamic';
+
 // Define the main page component
 export default function SignInPage() {
   return (
