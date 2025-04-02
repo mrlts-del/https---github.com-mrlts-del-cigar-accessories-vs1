@@ -95,14 +95,22 @@ export function ProfileForm({ user }: ProfileFormProps) {
               <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
-                    <FormControl> <Input placeholder="Your Name" {...field} disabled={isPending} /> </FormControl>
+                    <FormControl>
+                      <div> {/* Wrap the single child */}
+                        <Input placeholder="Your Name" {...field} disabled={isPending} />
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
                <FormItem>
                   <FormLabel>Email</FormLabel>
-                  <FormControl> <Input type="email" value={user.email ?? ''} disabled readOnly /> </FormControl>
+                  <FormControl>
+                    <div> {/* Wrap the single child */}
+                      <Input type="email" value={user.email ?? ''} disabled readOnly />
+                    </div>
+                  </FormControl>
                   <FormDescription>Email address cannot be changed.</FormDescription>
                </FormItem>
               <Button type="submit" disabled={isPending}>
