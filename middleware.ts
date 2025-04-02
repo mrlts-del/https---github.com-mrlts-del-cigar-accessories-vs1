@@ -1,75 +1,44 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { getToken } from '@auth/core/jwt'; // Use getToken to manually fetch token
-import { Role } from '@prisma/client';
+import { auth } from '@/lib/auth'; // Import the auth helper
+import { NextResponse } from 'next/server';
+// Removed: import { Role } from '@prisma/client';
 
-// Define the expected shape of the token (including role)
-// Role is added in the jwt callback, so it might be present
-interface TokenWithRole {
-  role?: Role; // Keep optional as it's added customly
-  email?: string | null; // Add email for logging
-  [key: string]: any; // Allow other JWT properties
-}
+// Define Role type locally based on your schema
+type Role = "ADMIN" | "USER";
 
-const secret = process.env.AUTH_SECRET;
-const publicPaths = ['/auth/signin', '/auth/signup', '/auth/forgot-password']; // Paths accessible without login
-const staticFileExtensions = /\.(ico|png|jpg|jpeg|gif|svg|css|js|map|webmanifest)$/i; // Regex for common static file extensions
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
+  const { auth } = req; // Get session/token from the request object injected by the auth middleware
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Allow requests to public paths, API routes, static files, etc.
-  if (
-    publicPaths.some((path) => pathname.startsWith(path)) ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next') ||
-    staticFileExtensions.test(pathname) // Check if it looks like a static file path
-  ) {
-    return NextResponse.next();
-  }
-
-  // Fetch the token
-  if (!secret) {
-     console.error("AUTH_SECRET environment variable is not set!");
-     // Handle appropriately - maybe redirect to an error page or allow access with warning
-     // For now, let's prevent access if secret is missing for security
-     return new NextResponse("Internal Server Error: Auth secret missing", { status: 500 });
-  }
-  const token = (await getToken({ req: request, secret })) as TokenWithRole | null;
-
-  // --- Authentication Check ---
-  // If no token and path is not public, redirect to signin
-  if (!token) {
-    const signInUrl = new URL('/auth/signin', request.url);
-    signInUrl.searchParams.set('callbackUrl', pathname); // Add callbackUrl
-    console.log(`No token found for path ${pathname}, redirecting to signin.`);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  // --- Authorization Check (Role-based) ---
-  // Check if the user is trying to access the admin area
+  // Authorization Check for Admin Routes
   if (pathname.startsWith('/admin')) {
-    // Check if the user has the ADMIN role
-    if (token.role !== Role.ADMIN) {
-      console.log(`Unauthorized access attempt to ${pathname} by user ${token?.email ?? 'guest'}`);
-      // Redirect non-admins to the home page
-      return NextResponse.redirect(new URL('/', request.url));
+    // If user is not logged in (auth is null) or not an ADMIN, redirect
+    // Compare with string literal "ADMIN" instead of Role.ADMIN
+    if (!auth || auth.user?.role !== "ADMIN") {
+      console.log(
+        `Unauthorized access attempt to ${pathname} by user ${
+          auth?.user?.email ?? 'guest'
+        }`
+      );
+      // Redirect non-admins trying to access /admin to the home page
+      return NextResponse.redirect(new URL('/', req.url));
     }
     // Allow access if user is admin
-    console.log(`Admin access granted to ${pathname} for user ${token?.email}`);
-    return NextResponse.next();
+    console.log(`Admin access granted to ${pathname} for user ${auth.user.email}`);
+    return NextResponse.next(); // Explicitly allow admin access
   }
 
-  // Allow access to other protected routes if authenticated
-  console.log(`Authenticated access granted to ${pathname} for user ${token?.email}`);
+  // For all other routes covered by the matcher,
+  // if the user is not authenticated, the `auth` middleware
+  // will automatically redirect them to the signIn page defined in `lib/auth.ts`.
+  // If they are authenticated, we allow them to proceed.
+  console.log(`Authenticated access granted to ${pathname} for user ${auth?.user?.email ?? 'unknown'}`);
   return NextResponse.next();
-}
+});
 
-// Configure which paths the middleware should run on.
+// Configure middleware to match routes - Use the guide's recommended matcher
+// Skip API routes, static files, public files, etc.
 export const config = {
   matcher: [
-    '/account/:path*', // Protect all account pages
-    '/admin/:path*',   // Protect all admin pages
-    '/checkout/:path*', // Protect checkout page(s)
-    // Add other specific paths to protect if needed
+    "/((?!api|_next/static|_next/image|favicon.ico|public).*)"
   ],
 };
