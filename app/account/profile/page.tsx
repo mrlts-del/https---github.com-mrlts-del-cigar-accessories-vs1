@@ -1,13 +1,13 @@
 import React from 'react';
-import getServerSession from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+// Remove getServerSession and authOptions import
+import { auth } from '@/lib/auth'; // Import the auth function
 import type { Session } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { ProfileForm } from '@/components/account/profile-form'; // Import form
-import type { User } from '@prisma/client'; // Import User for type assertion
+import type { User } from '@prisma/client'; // Keep User import if needed for ProfileForm prop type
 
 export default async function ProfilePage() {
-  const session = (await getServerSession(authOptions)) as unknown as Session | null;
+  const session = await auth(); // Use the auth function
 
   if (!session?.user) {
     redirect('/auth/signin?callbackUrl=/account/profile');
@@ -19,11 +19,11 @@ export default async function ProfilePage() {
   const userForForm: Omit<User, 'password' | 'emailVerified'> = {
      id: session.user.id,
      name: session.user.name ?? null, // Ensure null if undefined
-     email: session.user.email ?? null, // Ensure null if undefined
-     image: session.user.image ?? null, // Ensure null if undefined
-     role: session.user.role, // Role comes from our augmented session
-     // Add default/null values for other non-sensitive User fields if ProfileForm expects them
-     // For now, assuming ProfileForm only needs id, name, email, image, role
+      email: session.user.email ?? null, // Ensure null if undefined
+      image: session.user.image ?? null, // Ensure null if undefined
+      role: session.user.role!, // Use non-null assertion assuming role exists after auth check
+      // Add default/null values for other non-sensitive User fields if ProfileForm expects them
+      // For now, assuming ProfileForm only needs id, name, email, image, role
      createdAt: new Date(), // Placeholder, not needed by form but part of User type
      updatedAt: new Date(), // Placeholder, not needed by form but part of User type
   };

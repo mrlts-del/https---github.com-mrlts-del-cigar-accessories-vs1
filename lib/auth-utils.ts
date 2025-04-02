@@ -1,5 +1,5 @@
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import getServerSession from 'next-auth';
+import { authOptions } from '@/lib/auth-options'; // Correct import path
+import getServerSession from 'next-auth'; // Use default import
 import type { Session } from 'next-auth'; // Import augmented Session type
 
 /**

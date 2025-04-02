@@ -1,7 +1,7 @@
 import { createUploadthing, type FileRouter } from 'uploadthing/next';
 import { UploadThingError } from 'uploadthing/server';
 import getServerSession from 'next-auth'; // Use default import
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options'; // Correct import path
 import type { Session } from 'next-auth'; // Import augmented Session type
 import { Role } from '@prisma/client';
 
