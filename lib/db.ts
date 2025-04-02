@@ -1,25 +1,49 @@
 // lib/db.ts
-import { PrismaClient } from '@prisma/client'
-import { withAccelerate } from '@prisma/extension-accelerate'
+import { PrismaClient } from '@prisma/client'; // Use standard client
 
-// Create a factory function for PrismaClient instantiation
-const createPrismaClient = () => {
-  return new PrismaClient({
-    // Optionally configure logs
-    // log: ['query', 'error'],
-  }).$extends(withAccelerate())
+// Add a debug flag
+const DEBUG = false; // Set to true to enable logging
+
+// Standard Prisma Client creation function
+function createPrismaClient() {
+  if (DEBUG) console.log("Creating standard Prisma Client instance.");
+  return new PrismaClient();
 }
 
-// Define the type for the global object to hold the Prisma Client instance
-// This prevents creating multiple instances in development due to hot reloading
-const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined
+// Type definition for the global prisma instance
+type GlobalPrisma = ReturnType<typeof createPrismaClient>;
+
+// Global caching logic
+let prisma: GlobalPrisma | undefined;
+
+// Check if we are NOT in the Edge runtime environment
+const isNodeEnvironment = process.env.NEXT_RUNTIME !== 'edge';
+
+if (isNodeEnvironment) {
+  if (DEBUG) console.log("Detected Node.js environment (or not Edge). Applying global caching.");
+  if (process.env.NODE_ENV === 'production') {
+    prisma = createPrismaClient();
+  } else {
+    // In development, use global object to prevent too many connections
+    const globalWithPrisma = global as typeof globalThis & {
+      prisma?: GlobalPrisma;
+    };
+    if (!globalWithPrisma.prisma) {
+      if (DEBUG) console.log("Development environment: Creating new global Prisma instance.");
+      globalWithPrisma.prisma = createPrismaClient();
+    } else {
+      if (DEBUG) console.log("Development environment: Reusing existing global Prisma instance.");
+    }
+    prisma = globalWithPrisma.prisma;
+  }
+} else {
+  // In Edge environments, this setup won't cache.
+  if (DEBUG) console.log("Detected Edge environment. Global 'db' instance will be undefined.");
+  // prisma remains undefined for Edge in this module's scope.
 }
 
-// Use the existing global instance if available, otherwise create a new one
-export const db = globalForPrisma.prisma ?? createPrismaClient()
+// Export the cached instance for Node.js environments.
+export const db = prisma!; // Use non-null assertion cautiously. Code using this export should only run in Node.js context.
 
-// In development, store the created instance globally
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db
-}
+// Export the creator function if needed elsewhere
+export { createPrismaClient };
