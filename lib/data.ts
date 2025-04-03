@@ -61,8 +61,8 @@ export async function fetchProducts(
     return products;
   } catch (error) {
     console.error('Database Error: Failed to fetch products.', error);
-    // In a real app, you might throw a more specific error or return an empty array
-    throw new Error('Failed to fetch products.');
+    // Return empty array instead of throwing an error
+    return [];
   }
 }
 

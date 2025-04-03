@@ -1,6 +1,7 @@
 // lib/auth.ts
-import NextAuth from "next-auth";
-import { authOptions } from "./auth-options"; // Import from the new options file
+// Re-export authOptions for potential use elsewhere,
+// but remove the v5 initialization causing Edge issues.
+export { authOptions } from "./auth-options";
 
-// Initialize Auth.js with the imported options and export the necessary functions/handlers
-export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
+// Note: The handlers, auth, signIn, signOut exports from v5 are removed.
+// These functionalities are accessed differently in v4 (e.g., via API route, getSession, useSession).

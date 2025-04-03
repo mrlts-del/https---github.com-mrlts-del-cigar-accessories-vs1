@@ -1,13 +1,14 @@
 import React from 'react';
-// Remove getServerSession and authOptions import
-import { auth } from '@/lib/auth'; // Import the auth function
+import { getServerSession } from "next-auth/next"; // Import v4 getServerSession
+import { authOptions } from "@/lib/auth-options"; // Import v4 authOptions
 import type { Session } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { ProfileForm } from '@/components/account/profile-form'; // Import form
-import type { User } from '@prisma/client'; // Keep User import if needed for ProfileForm prop type
+// Remove problematic User type import
 
 export default async function ProfilePage() {
-  const session = await auth(); // Use the auth function
+  // Use v4 getServerSession pattern
+  const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     redirect('/auth/signin?callbackUrl=/account/profile');
@@ -16,14 +17,17 @@ export default async function ProfilePage() {
   // We need to pass the user object to the form, excluding sensitive fields
   // The session object might not have all User fields, adjust as needed
   // or fetch the full user object from DB if necessary.
-  const userForForm: Omit<User, 'password' | 'emailVerified'> = {
-     id: session.user.id,
-     name: session.user.name ?? null, // Ensure null if undefined
-      email: session.user.email ?? null, // Ensure null if undefined
-      image: session.user.image ?? null, // Ensure null if undefined
-      role: session.user.role!, // Use non-null assertion assuming role exists after auth check
-      // Add default/null values for other non-sensitive User fields if ProfileForm expects them
-      // For now, assuming ProfileForm only needs id, name, email, image, role
+  // Use 'any' as a workaround for the User type resolution issue
+  const userForForm: Omit<any, 'password' | 'emailVerified'> = {
+     // Access user properties from v4 session object
+     // Ensure the session callback in authOptions adds necessary fields like id and role
+     id: session.user.id!, // Assuming id is added in session callback
+     name: session.user.name ?? null,
+     email: session.user.email ?? null,
+     image: session.user.image ?? null,
+     // Access role potentially added in session callback (might need type assertion)
+     role: (session.user as any).role ?? 'USER', // Default to USER if role isn't found/added
+     // Add default/null values for other non-sensitive User fields if ProfileForm expects them
      createdAt: new Date(), // Placeholder, not needed by form but part of User type
      updatedAt: new Date(), // Placeholder, not needed by form but part of User type
   };

@@ -1,6 +1,10 @@
 // lib/auth-options.ts
-import type { NextAuthConfig } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+// Removed explicit dotenv loading - rely on Next.js built-in handling
+
+import type { NextAuthOptions, User, Session } from "next-auth"; // Import v4 types (remove JWT from here)
+import type { JWT } from "next-auth/jwt"; // Import JWT type from correct path
+import { PrismaAdapter } from "@next-auth/prisma-adapter"; // Use v4 adapter package
+import type { AdapterUser } from "next-auth/adapters"; // Import AdapterUser type from correct path
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
@@ -26,7 +30,7 @@ const adapter = getPrismaAdapter();
 if (DEBUG) console.log(`Auth setup (options): ${adapter ? 'Using PrismaAdapter' : 'Skipping PrismaAdapter'}.`);
 
 // Define and export the auth options
-export const authOptions: NextAuthConfig = {
+export const authOptions: NextAuthOptions = { // Use NextAuthOptions type
   adapter: adapter, // Use the conditional adapter
   session: { strategy: "jwt" }, // Use JWT strategy for Edge compatibility
   providers: [
@@ -67,30 +71,38 @@ export const authOptions: NextAuthConfig = {
        }
     }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? ""
+      clientId: process.env.GOOGLE_CLIENT_ID!, // Use non-null assertion or remove ?? ""
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!, // Use non-null assertion or remove ?? ""
+      allowDangerousEmailAccountLinking: true,
     }),
     GitHubProvider({
-      clientId: process.env.GITHUB_ID ?? "",
-      clientSecret: process.env.GITHUB_SECRET ?? ""
+      clientId: process.env.GITHUB_ID!, // Use non-null assertion or remove ?? ""
+      clientSecret: process.env.GITHUB_SECRET!, // Use non-null assertion or remove ?? ""
+      allowDangerousEmailAccountLinking: true,
     })
   ],
   callbacks: {
-    // Your existing callbacks, ensure they are Edge-compatible
-    async jwt({ token, user }) {
+    // Add types to callback parameters
+    async jwt({ token, user }: { token: JWT; user?: AdapterUser | User }) { // Add types for token and user
+       console.log("[DEBUG] JWT Callback - User:", user); // Log user object
+       console.log("[DEBUG] JWT Callback - Initial Token:", token); // Log initial token
        if (user) {
          token.id = user.id;
-         token.role = user.role;
+         // Assuming 'role' exists on your User model and is added to AdapterUser/User type if needed
+         // If 'role' is not directly on the user object passed here, you might need to fetch it
+         token.role = (user as any).role; // Cast to any temporarily if role isn't typed on user/adapterUser
        }
+       console.log("[DEBUG] JWT Callback - Final Token:", token); // Log final token
        return token;
     },
-     async session({ session, token }) {
+     async session({ session, token }: { session: Session; token: JWT }) { // Add types for session and token
        if (token && session.user) {
          if (token.id && typeof token.id === 'string') {
-           session.user.id = token.id as string; // Persistent TS error here might be ignorable
+           session.user.id = token.id; // Assign token.id to session.user.id
          }
          if (token.role) {
-           session.user.role = token.role;
+           // Ensure session.user is extended to include 'role' in your types/next-auth.d.ts
+           (session.user as any).role = token.role; // Cast to any temporarily if role isn't typed on session.user
          }
       }
       return session;
@@ -99,6 +111,7 @@ export const authOptions: NextAuthConfig = {
   pages: {
     signIn: "/auth/signin" // Custom sign-in page
   },
-  secret: process.env.AUTH_SECRET,
-  // debug: process.env.NODE_ENV === 'development', // Optional debug flag for NextAuth itself
+  // Use NEXTAUTH_SECRET as per v4 convention
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Enable NextAuth debug logging
 };

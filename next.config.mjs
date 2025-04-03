@@ -17,4 +17,4 @@ const nextConfig = {
   /* other config options here */
 };
 
-module.exports = nextConfig;
+export default nextConfig; // Use ES Module export

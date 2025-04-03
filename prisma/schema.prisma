@@ -3,13 +3,14 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"] // Only driverAdapters as per new guide
-  engineType      = "library" // Add this line for better Edge compatibility
+  previewFeatures = ["driverAdapters", "multiSchema"] // Add multiSchema
+  // engineType      = "library" // Remove this line for now
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  // schemas   = ["public"] // Remove this for now
   // directUrl = env("DIRECT_URL") // Comment out unless specifically needed (e.g., Neon)
 }
 

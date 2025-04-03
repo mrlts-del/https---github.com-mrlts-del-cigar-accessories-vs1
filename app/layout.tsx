@@ -1,20 +1,17 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google'; // Import Inter font
 import './globals.css';
-import { SessionProvider } from 'next-auth/react';
+// Remove direct SessionProvider import
+import AuthProvider from '@/components/providers/session-provider'; // Import the client component wrapper
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Setup Inter font
+const inter = Inter({
   subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: '--font-sans', // Use standard CSS variable name
 });
 
 export const metadata: Metadata = {
@@ -28,13 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionProvider>
+    // Use the AuthProvider wrapper component
+    <AuthProvider>
       <html lang="en" suppressHydrationWarning className="h-full">
         <body
           className={cn(
             'relative flex min-h-full flex-col bg-background font-sans antialiased',
-            geistSans.variable,
-            geistMono.variable
+            inter.variable // Apply the Inter font variable
           )}
         >
           <Header />
@@ -47,6 +44,6 @@ export default function RootLayout({
           <Toaster richColors position="top-right" />
         </body>
       </html>
-    </SessionProvider>
+    </AuthProvider>
   );
 }

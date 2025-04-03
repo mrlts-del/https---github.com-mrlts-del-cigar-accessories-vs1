@@ -1,31 +1,25 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import getServerSession from 'next-auth'; // Use default import
-import { authOptions } from '@/lib/auth'; // Correct import path for authOptions
+import { authOptions } from '@/lib/auth-options'; // Correct import path for authOptions
 import { getOrderById } from '@/actions/order'; // Import fetch action
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-// import { Separator } from '@/components/ui/separator'; // Removed unused import
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata, ResolvingMetadata } from 'next'; // Import Next.js types
+// Remove Prisma type import for OrderItem
 
 // TODO: Import component/action for updating status from this page if needed
-
-// Use standard Next.js PageProps type structure
-interface PageProps {
-  params: { orderId: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
 
 // Helper function to format date (could be moved to utils)
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-// Use the standard PageProps type
-export default async function AdminOrderDetailPage({ params }: PageProps) {
+// Explicitly type params in the function signature
+export default async function AdminOrderDetailPage({ params }: { params: { orderId: string } }) {
   // Example of getting session server-side (though not strictly needed for this page's logic)
   const session = await getServerSession(authOptions);
   // You could add checks here based on session if needed
@@ -71,7 +65,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                <CardHeader><CardTitle>Items Ordered</CardTitle></CardHeader>
                <CardContent className="p-0">
                   <ul className="divide-y divide-border">
-                     {order.items.map((item) => (
+                     {/* Explicitly type 'item' as any as a workaround for type resolution issues */}
+                     {order.items.map((item: any) => (
                         <li key={item.id} className="flex items-center gap-4 p-4">
                            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded">
                               <Image

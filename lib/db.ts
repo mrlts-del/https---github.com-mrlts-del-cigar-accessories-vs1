@@ -1,49 +1,44 @@
-// lib/db.ts
-import { PrismaClient } from '@prisma/client'; // Use standard client
+import { PrismaClient } from '@prisma/client'; // Import standard client
+import { PrismaNeon } from '@prisma/adapter-neon'; // Import Neon adapter
+import { Pool } from '@neondatabase/serverless'; // Import Neon Pool
 
-// Add a debug flag
-const DEBUG = false; // Set to true to enable logging
-
-// Standard Prisma Client creation function
-function createPrismaClient() {
-  if (DEBUG) console.log("Creating standard Prisma Client instance.");
-  return new PrismaClient();
+// Declare a global variable to potentially cache the Prisma Client in development (Node.js only)
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
 }
 
-// Type definition for the global prisma instance
-type GlobalPrisma = ReturnType<typeof createPrismaClient>;
+let prisma: PrismaClient;
 
-// Global caching logic
-let prisma: GlobalPrisma | undefined;
-
-// Check if we are NOT in the Edge runtime environment
-const isNodeEnvironment = process.env.NEXT_RUNTIME !== 'edge';
+// Check if we are in a Node.js environment (specifically NOT Edge)
+const isNodeEnvironment = typeof process !== 'undefined' && process.env.NEXT_RUNTIME !== 'edge';
 
 if (isNodeEnvironment) {
-  if (DEBUG) console.log("Detected Node.js environment (or not Edge). Applying global caching.");
+  // In Node.js environment (development or production build)
   if (process.env.NODE_ENV === 'production') {
-    prisma = createPrismaClient();
+    // In production build (Node.js), create a single instance
+    const neon = new Pool({ connectionString: process.env.DATABASE_URL! });
+    const adapter = new PrismaNeon(neon);
+    prisma = new PrismaClient({ adapter });
   } else {
-    // In development, use global object to prevent too many connections
-    const globalWithPrisma = global as typeof globalThis & {
-      prisma?: GlobalPrisma;
-    };
-    if (!globalWithPrisma.prisma) {
-      if (DEBUG) console.log("Development environment: Creating new global Prisma instance.");
-      globalWithPrisma.prisma = createPrismaClient();
+    // In development (Node.js), use global caching to avoid multiple instances
+    if (!global.prisma) {
+      const neon = new Pool({ connectionString: process.env.DATABASE_URL! });
+      const adapter = new PrismaNeon(neon);
+      global.prisma = new PrismaClient({ adapter });
+      console.log("Development: Created global Prisma Client instance (Node.js).");
     } else {
-      if (DEBUG) console.log("Development environment: Reusing existing global Prisma instance.");
+      console.log("Development: Reusing global Prisma Client instance (Node.js).");
     }
-    prisma = globalWithPrisma.prisma;
+    prisma = global.prisma;
   }
 } else {
-  // In Edge environments, this setup won't cache.
-  if (DEBUG) console.log("Detected Edge environment. Global 'db' instance will be undefined.");
-  // prisma remains undefined for Edge in this module's scope.
+  // In Edge environment (Middleware, Edge Functions)
+  // Create a new instance for each request (no global caching)
+  const neon = new Pool({ connectionString: process.env.DATABASE_URL! });
+  const adapter = new PrismaNeon(neon);
+  prisma = new PrismaClient({ adapter });
+  // console.log("Edge Environment: Created new Prisma Client instance."); // Optional: Log for debugging Edge
 }
 
-// Export the cached instance for Node.js environments.
-export const db = prisma!; // Use non-null assertion cautiously. Code using this export should only run in Node.js context.
-
-// Export the creator function if needed elsewhere
-export { createPrismaClient };
+export const db = prisma;

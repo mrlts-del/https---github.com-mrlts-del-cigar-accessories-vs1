@@ -60,15 +60,31 @@ export async function createProduct(values: ProductInput): Promise<ActionResult>
   }
   const { images, ...productData } = validatedFields.data;
 
-  // Generate slug (consider checking for uniqueness)
-  const slug = generateSlug(productData.name);
-  // TODO: Add logic to ensure slug uniqueness (e.g., append number if exists)
+  // Generate initial slug
+  let slug = generateSlug(productData.name);
 
   try {
+    // Check for existing slug and append random string if needed
+    let counter = 0;
+    let uniqueSlugFound = false;
+    while (!uniqueSlugFound) {
+      const existingProduct = await db.product.findUnique({ where: { slug } });
+      if (!existingProduct) {
+        uniqueSlugFound = true;
+      } else {
+        counter++;
+        // Append a short random string for better uniqueness than just a number
+        slug = `${generateSlug(productData.name)}-${Math.random().toString(36).substring(2, 7)}`;
+        if (counter > 5) { // Prevent infinite loop in unlikely edge cases
+          throw new Error('Could not generate a unique slug after multiple attempts.');
+        }
+      }
+    }
+
     const newProduct = await db.product.create({
       data: {
         ...productData,
-        slug: slug, // Add generated slug
+        slug: slug, // Use the potentially modified unique slug
         images: {
           // Create related image records
           create: images.map(img => ({ url: img.url /* , key: img.key // Store key if needed for deletion */ })),
@@ -81,11 +97,8 @@ export async function createProduct(values: ProductInput): Promise<ActionResult>
     return { success: true, productId: newProduct.id };
   } catch (error) {
     console.error('Error creating product:', error);
-    // Handle potential unique constraint errors (e.g., slug)
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-       return { success: false, error: 'A product with this name/slug might already exist.' };
-    }
-    return { success: false, error: 'Failed to create product.' };
+    // Specific handling for P2002 is less needed now due to pre-check, but keep general error handling
+    return { success: false, error: `Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
@@ -106,11 +119,27 @@ export async function updateProduct(
   }
    const { images, ...productData } = validatedFields.data;
 
-   // Regenerate slug if name changed (optional, consider implications)
-   const slug = generateSlug(productData.name);
-   // TODO: Ensure slug uniqueness if regenerating
+   // Regenerate slug if name changed and check uniqueness
+   let slug = generateSlug(productData.name);
+   // TODO: Decide if slug should *always* update on name change, or only if different.
+   // Current implementation updates slug on every name change.
 
    try {
+      // Check for slug conflict before updating within transaction
+      const existingProductWithSlug = await db.product.findFirst({
+         where: {
+            slug: slug,
+            id: { not: productId } // Exclude the current product
+         }
+      });
+
+      if (existingProductWithSlug) {
+         // Append random string if conflict detected
+         slug = `${generateSlug(productData.name)}-${Math.random().toString(36).substring(2, 7)}`;
+         // Consider adding a loop/counter here as well for robustness if needed
+      }
+
+
       // Use transaction to update product and manage images
       await db.$transaction(async (tx) => {
          // 1. Update product base data
@@ -118,7 +147,7 @@ export async function updateProduct(
             where: { id: productId },
             data: {
                ...productData,
-               slug: slug, // Update slug if needed
+               slug: slug, // Use potentially modified unique slug
             },
          });
 
@@ -160,10 +189,8 @@ export async function updateProduct(
 
    } catch (error) {
       console.error(`Error updating product ${productId}:`, error);
-       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-         return { success: false, error: 'A product with this name/slug might already exist.' };
-      }
-      return { success: false, error: 'Failed to update product.' };
+      // Specific handling for P2002 is less needed now due to pre-check, but keep general error handling
+      return { success: false, error: `Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}` };
    }
 }
 

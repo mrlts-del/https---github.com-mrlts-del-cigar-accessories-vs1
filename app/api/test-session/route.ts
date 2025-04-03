@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth'; // Import the auth function
+import { getServerSession } from "next-auth/next"; // Import v4 getServerSession
+import { authOptions } from "@/lib/auth-options"; // Import v4 authOptions
 
-export async function GET(request: Request) { // Add request parameter if needed by auth()
-  console.log("Attempting to get session in /api/test-session using auth()...");
+export async function GET(request: Request) {
+  console.log("Attempting to get session in /api/test-session using getServerSession...");
   try {
-    const session = await auth(); // Use the auth function
+    // Use v4 getServerSession pattern
+    const session = await getServerSession(authOptions);
     if (session) {
       console.log("Session found:", JSON.stringify(session, null, 2));
       // Return the session directly as per the guide's example
